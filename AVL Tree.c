@@ -8,43 +8,51 @@ struct Node {
     int height;
 };
 
+
+int max(int a, int b) {
+    return (a > b) ? a : b;
+}
+
 int height(struct Node *N) {
     if (N == NULL)
         return 0;
     return N->height;
 }
 
-int max(int a, int b) {
-    return (a > b) ? a : b;
-}
 
 struct Node* newNode(int key) {
-    struct Node* node = (struct Node*)malloc(sizeof(struct Node));
+    struct Node* node = (struct Node*) malloc(sizeof(struct Node));
     node->key = key;
     node->left = node->right = NULL;
-    node->height = 1;
+    node->height = 1; // New node is initially at height 1
     return node;
 }
+
 
 struct Node* rightRotate(struct Node* y) {
     struct Node* x = y->left;
     struct Node* T2 = x->right;
 
+   
     x->right = y;
     y->left = T2;
 
+  
     y->height = max(height(y->left), height(y->right)) + 1;
     x->height = max(height(x->left), height(x->right)) + 1;
 
     return x;
 }
 
+
 struct Node* leftRotate(struct Node* x) {
     struct Node* y = x->right;
     struct Node* T2 = y->left;
 
+
     y->left = x;
     x->right = T2;
+
 
     x->height = max(height(x->left), height(x->right)) + 1;
     y->height = max(height(y->left), height(y->right)) + 1;
@@ -67,8 +75,9 @@ struct Node* insert(struct Node* node, int key) {
         node->left = insert(node->left, key);
     else if (key > node->key)
         node->right = insert(node->right, key);
-    else
-        return node; // no duplicates
+    else // Equal keys not allowed
+        return node;
+
 
     node->height = 1 + max(height(node->left), height(node->right));
 
@@ -77,8 +86,10 @@ struct Node* insert(struct Node* node, int key) {
     if (balance > 1 && key < node->left->key)
         return rightRotate(node);
 
+
     if (balance < -1 && key > node->right->key)
         return leftRotate(node);
+
 
     if (balance > 1 && key > node->left->key) {
         node->left = leftRotate(node->left);
@@ -101,38 +112,43 @@ struct Node* minValueNode(struct Node* node) {
 }
 
 struct Node* deleteNode(struct Node* root, int key) {
-
-    if (root == NULL) return root;
+    if (root == NULL)
+        return root;
 
     if (key < root->key)
         root->left = deleteNode(root->left, key);
     else if (key > root->key)
         root->right = deleteNode(root->right, key);
     else {
+       
         if ((root->left == NULL) || (root->right == NULL)) {
             struct Node* temp = root->left ? root->left : root->right;
 
             if (temp == NULL) {
                 temp = root;
                 root = NULL;
-            } else {
-                *root = *temp;
-            }
+            } else 
+                *root = *temp; // Copy contents
             free(temp);
         } else {
-            // Node with 2 children: get inorder successor
+  
             struct Node* temp = minValueNode(root->right);
             root->key = temp->key;
             root->right = deleteNode(root->right, temp->key);
         }
     }
 
-    if (root == NULL) return root;
+    if (root == NULL)
+        return root;
+
 
     root->height = 1 + max(height(root->left), height(root->right));
 
 
     int balance = getBalance(root);
+
+
+
 
     if (balance > 1 && getBalance(root->left) >= 0)
         return rightRotate(root);
@@ -145,6 +161,7 @@ struct Node* deleteNode(struct Node* root, int key) {
     if (balance < -1 && getBalance(root->right) <= 0)
         return leftRotate(root);
 
+
     if (balance < -1 && getBalance(root->right) > 0) {
         root->right = rightRotate(root->right);
         return leftRotate(root);
@@ -152,6 +169,7 @@ struct Node* deleteNode(struct Node* root, int key) {
 
     return root;
 }
+
 
 struct Node* search(struct Node* root, int key) {
     if (root == NULL || root->key == key)
@@ -161,56 +179,58 @@ struct Node* search(struct Node* root, int key) {
     return search(root->right, key);
 }
 
-void inorder(struct Node* root) {
+void preOrder(struct Node* root) {
     if (root != NULL) {
-        inorder(root->left);
         printf("%d ", root->key);
-        inorder(root->right);
+        preOrder(root->left);
+        preOrder(root->right);
     }
 }
+
 
 int main() {
     struct Node* root = NULL;
     int choice, key;
+    struct Node* result;
 
     while (1) {
-        printf("\n--- AVL Tree Menu ---\n");
-        printf("1. Insert\n2. Delete\n3. Search\n4. Display (Inorder)\n5. Exit\n");
-        printf("Enter choice: ");
+        printf("\n--- AVL Tree Operations ---\n");
+        printf("1. Insert\n2. Delete\n3. Search\n4. Display (Preorder)\n5. Exit\n");
+        printf("Enter your choice: ");
         scanf("%d", &choice);
 
         switch (choice) {
         case 1:
-            printf("Enter value to insert: ");
+            printf("Enter key to insert: ");
             scanf("%d", &key);
             root = insert(root, key);
             break;
-
         case 2:
-            printf("Enter value to delete: ");
+            printf("Enter key to delete: ");
             scanf("%d", &key);
             root = deleteNode(root, key);
             break;
-
         case 3:
-            printf("Enter value to search: ");
+            printf("Enter key to search: ");
             scanf("%d", &key);
-            if (search(root, key))
-                printf("Found %d in AVL Tree\n", key);
+            result = search(root, key);
+            if (result != NULL)
+                printf("Key %d found in the AVL tree.\n", key);
             else
-                printf("%d not found\n", key);
+                printf("Key %d not found in the AVL tree.\n", key);
             break;
-
         case 4:
-            printf("Inorder Traversal: ");
-            inorder(root);
+            printf("Preorder traversal: ");
+            preOrder(root);
             printf("\n");
             break;
-
         case 5:
             exit(0);
+        default:
+            printf("Invalid choice!\n");
         }
     }
 
     return 0;
 }
+
